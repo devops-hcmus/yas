@@ -20,7 +20,7 @@ def call() {
         stage("${serviceName}: Phase 1 - Unit Tests") {
             try {
                 // sh "mvn test jacoco:report -pl ${serviceName} -am"
-                sh 'mvn -pl webhook test jacoco:report'
+                sh "mvn -pl ${serviceName} test jacoco:report ${env.MAVEN_OPTS}"
             } finally {
                 junit testResults: "${serviceName}/**/surefire-reports/TEST*.xml",
                       allowEmptyResults: true
