@@ -19,7 +19,8 @@ def call() {
         // ─── Phase 1: Test ─────────────────────────────────────────────────────
         stage("${serviceName}: Phase 1 - Unit Tests") {
             try {
-                sh "mvn test jacoco:report -pl ${serviceName} -am"
+                // sh "mvn test jacoco:report -pl ${serviceName} -am"
+                sh 'mvn -pl webhook test jacoco:report'
             } finally {
                 junit testResults: "${serviceName}/**/surefire-reports/TEST*.xml",
                       allowEmptyResults: true
