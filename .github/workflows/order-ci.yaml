@@ -53,19 +53,18 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -f order
+      - name: Make Maven Wrapper Executable
+        run: chmod +x mvnw
       - name: Setup Snyk CLI
         uses: snyk/actions/setup@master
-      - name: Maven Wrapper Permissions
-        run: |
-          chmod +x mvnw || true
-          chmod -R 777 ~/.m2 || true 
-
       - name: Run Snyk to check for vulnerabilities
         working-directory: order
         continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        run: snyk monitor --file=pom.xml --project-name=yas-order -d
+        run: |
+          snyk config set org=giahuytechie
+          snyk monitor --file=pom.xml --project-name=yas-order
       - name: Add coverage report to PR
         uses: madrapps/jacoco-report@v1.6.1
         if: ${{ env.FROM_ORIGINAL_REPOSITORY == 'true' }}
