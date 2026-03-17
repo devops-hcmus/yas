@@ -82,6 +82,39 @@ jobs:
           title: 'Media Coverage Report'
           update-comment: true
 
+      - name: Enforce minimum test coverage (70%)
+        if: ${{ env.FROM_ORIGINAL_REPOSITORY == 'true' }}
+        shell: bash
+        run: |
+          JACOCO_XML="${{github.workspace}}/media/target/site/jacoco/jacoco.xml"
+          if [ ! -f "$JACOCO_XML" ]; then
+            echo "JaCoCo report not found at $JACOCO_XML"
+            exit 1
+          fi
+
+          LINE_COUNTER=$(grep '<counter type="LINE"' "$JACOCO_XML" | tail -n 1)
+          MISSED=$(echo "$LINE_COUNTER" | sed -n 's/.*missed="\([0-9]\+\)".*/\1/p')
+          COVERED=$(echo "$LINE_COUNTER" | sed -n 's/.*covered="\([0-9]\+\)".*/\1/p')
+
+          if [ -z "$MISSED" ] || [ -z "$COVERED" ]; then
+            echo "Unable to parse LINE coverage from JaCoCo report"
+            exit 1
+          fi
+
+          TOTAL=$((MISSED + COVERED))
+          if [ "$TOTAL" -eq 0 ]; then
+            echo "Total lines in JaCoCo report is 0"
+            exit 1
+          fi
+
+          COVERAGE=$(awk "BEGIN { printf \"%.2f\", ($COVERED / $TOTAL) * 100 }")
+          echo "Overall line coverage: ${COVERAGE}%"
+
+          awk "BEGIN { exit !($COVERAGE >= 70) }" || {
+            echo "Coverage gate failed: ${COVERAGE}% < 70%"
+            exit 1
+          }
+
       - name: Analyze with sonar cloud
         if: ${{ env.FROM_ORIGINAL_REPOSITORY == 'true' }}
         env:
