@@ -86,6 +86,7 @@ jobs:
         if: ${{ env.FROM_ORIGINAL_REPOSITORY == 'true' }}
         run: |
           overall="${{ steps.jacoco.outputs.coverage-overall }}"
+          echo "Current overall coverage: ${overall}%"
           if [ -z "$overall" ]; then
             echo "Unable to read JaCoCo overall coverage output."
             exit 1
