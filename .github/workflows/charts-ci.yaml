@@ -36,3 +36,4 @@ jobs:
           charts_dir: k8s/charts
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          
