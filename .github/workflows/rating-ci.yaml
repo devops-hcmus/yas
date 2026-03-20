@@ -72,6 +72,7 @@ jobs:
           path: "rating/**/*-reports/TEST*.xml"
           reporter: java-junit
       - name: Add coverage report to PR
+        id: jacoco
         uses: madrapps/jacoco-report@v1.6.1
         if: ${{ env.FROM_ORIGINAL_REPOSITORY == 'true' }}
         with:
@@ -81,6 +82,20 @@ jobs:
           min-coverage-changed-files: 70
           title: 'Rating Coverage Report'
           update-comment: true
+
+      - name: Enforce minimum coverage threshold
+        if: ${{ env.FROM_ORIGINAL_REPOSITORY == 'true' }}
+        run: |
+          overall="${{ steps.jacoco.outputs.coverage-overall }}"
+          echo "Current overall coverage: ${overall}%"
+          if [ -z "$overall" ]; then
+            echo "Unable to read JaCoCo overall coverage output."
+            exit 1
+          fi
+          awk "BEGIN {exit !($overall >= 70)}" || {
+            echo "Coverage check failed: overall coverage ${overall}% is below 70%."
+            exit 1
+          }
 
       - name: Analyze with sonar cloud
         if: ${{ env.FROM_ORIGINAL_REPOSITORY == 'true' }}
