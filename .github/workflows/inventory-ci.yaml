@@ -99,7 +99,7 @@ jobs:
         if: ${{ env.FROM_ORIGINAL_REPOSITORY == 'true' }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -f inventory -Dsonar.projectName=yas
+        run: mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -f inventory
 
   build:
     needs: test

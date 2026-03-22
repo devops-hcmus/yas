@@ -86,7 +86,7 @@ jobs:
         if: ${{ env.FROM_ORIGINAL_REPOSITORY == 'true' }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -f storefront-bff -Dsonar.projectName=yas
+        run: mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -f storefront-bff
   build:
     needs: test
     runs-on: ubuntu-latest
