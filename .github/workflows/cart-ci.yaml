@@ -101,7 +101,7 @@ jobs:
         if: ${{ env.FROM_ORIGINAL_REPOSITORY == 'true' }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -pl cart -am -Dsonar.projectName=yas
+        run: mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -pl cart -am
   build:
     needs: test
     runs-on: ubuntu-latest

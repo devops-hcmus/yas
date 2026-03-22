@@ -44,7 +44,7 @@ jobs:
         if: ${{ env.FROM_ORIGINAL_REPOSITORY == 'true' }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -f backoffice-bff -Dsonar.projectName=yas
+        run: mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -f backoffice-bff
       - name: Setup Snyk CLI  
         if: ${{ env.FROM_ORIGINAL_REPOSITORY == 'true' }}
         uses: snyk/actions/setup@master
