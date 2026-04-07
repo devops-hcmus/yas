@@ -113,6 +113,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/workflows/actions
+      - name: Get commit ID
+        id: commit
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            COMMIT_ID=$(git rev-parse --short ${{ github.event.pull_request.head.sha }})
+          else
+            COMMIT_ID=$(git rev-parse --short ${{ github.sha }})
+          fi
+          echo "commit_id=${COMMIT_ID}" >> "$GITHUB_OUTPUT"
       - name: Build Maven package for Docker
         run: mvn clean package -DskipTests -pl recommendation -am
       - name: Build Docker image (PR check)
@@ -122,20 +131,26 @@ jobs:
           context: ./recommendation
           push: false
           tags: ghcr.io/devops-hcmus/yas-recommendation:latest
-      - name: Log in to the Container registry
-        if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Log in to Docker Hub
+        if: ${{ github.event_name == 'push' }}
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and push Docker images
-        if: ${{ github.ref == 'refs/heads/main' }}
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+      - name: Build and push Docker image to Docker Hub (all branches with commit ID)
+        if: ${{ github.event_name == 'push' }}
         uses: docker/build-push-action@v6
         with:
           context: ./recommendation
           push: true
-          tags: ghcr.io/devops-hcmus/yas-recommendation:latest
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/yas-recommendation:${{ steps.commit.outputs.commit_id }}
+      - name: Build and push Docker image to Docker Hub (main branch with latest tag)
+        if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+        uses: docker/build-push-action@v6
+        with:
+          context: ./recommendation
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/yas-recommendation:latest
   ci-pass:
     runs-on: ubuntu-latest
     needs: [test, build]

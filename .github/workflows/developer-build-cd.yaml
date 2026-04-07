@@ -1,0 +1,437 @@
+name: Developer Build CD
+
+on:
+  workflow_dispatch:
+    inputs:
+      cart_branch:
+        description: 'Branch for cart service (default: main)'
+        required: false
+        default: 'main'
+      customer_branch:
+        description: 'Branch for customer service (default: main)'
+        required: false
+        default: 'main'
+      inventory_branch:
+        description: 'Branch for inventory service (default: main)'
+        required: false
+        default: 'main'
+      location_branch:
+        description: 'Branch for location service (default: main)'
+        required: false
+        default: 'main'
+      media_branch:
+        description: 'Branch for media service (default: main)'
+        required: false
+        default: 'main'
+      order_branch:
+        description: 'Branch for order service (default: main)'
+        required: false
+        default: 'main'
+      payment_branch:
+        description: 'Branch for payment service (default: main)'
+        required: false
+        default: 'main'
+      payment_paypal_branch:
+        description: 'Branch for payment-paypal service (default: main)'
+        required: false
+        default: 'main'
+      product_branch:
+        description: 'Branch for product service (default: main)'
+        required: false
+        default: 'main'
+      promotion_branch:
+        description: 'Branch for promotion service (default: main)'
+        required: false
+        default: 'main'
+      rating_branch:
+        description: 'Branch for rating service (default: main)'
+        required: false
+        default: 'main'
+      recommendation_branch:
+        description: 'Branch for recommendation service (default: main)'
+        required: false
+        default: 'main'
+      search_branch:
+        description: 'Branch for search service (default: main)'
+        required: false
+        default: 'main'
+      tax_branch:
+        description: 'Branch for tax service (default: main)'
+        required: false
+        default: 'main'
+      webhook_branch:
+        description: 'Branch for webhook service (default: main)'
+        required: false
+        default: 'main'
+      backoffice_bff_branch:
+        description: 'Branch for backoffice-bff service (default: main)'
+        required: false
+        default: 'main'
+      storefront_bff_branch:
+        description: 'Branch for storefront-bff service (default: main)'
+        required: false
+        default: 'main'
+      storefront_branch:
+        description: 'Branch for storefront frontend (default: main)'
+        required: false
+        default: 'main'
+      backoffice_branch:
+        description: 'Branch for backoffice frontend (default: main)'
+        required: false
+        default: 'main'
+      sampledata_branch:
+        description: 'Branch for sampledata service (default: main)'
+        required: false
+        default: 'main'
+      namespace:
+        description: 'K8s namespace (default: yas-dev)'
+        required: false
+        default: 'yas-dev'
+
+jobs:
+  get-commit-ids:
+    runs-on: ubuntu-latest
+    outputs:
+      cart_tag: ${{ steps.cart.outputs.tag }}
+      customer_tag: ${{ steps.customer.outputs.tag }}
+      inventory_tag: ${{ steps.inventory.outputs.tag }}
+      location_tag: ${{ steps.location.outputs.tag }}
+      media_tag: ${{ steps.media.outputs.tag }}
+      order_tag: ${{ steps.order.outputs.tag }}
+      payment_tag: ${{ steps.payment.outputs.tag }}
+      payment_paypal_tag: ${{ steps.payment_paypal.outputs.tag }}
+      product_tag: ${{ steps.product.outputs.tag }}
+      promotion_tag: ${{ steps.promotion.outputs.tag }}
+      rating_tag: ${{ steps.rating.outputs.tag }}
+      recommendation_tag: ${{ steps.recommendation.outputs.tag }}
+      search_tag: ${{ steps.search.outputs.tag }}
+      tax_tag: ${{ steps.tax.outputs.tag }}
+      webhook_tag: ${{ steps.webhook.outputs.tag }}
+      backoffice_bff_tag: ${{ steps.backoffice_bff.outputs.tag }}
+      storefront_bff_tag: ${{ steps.storefront_bff.outputs.tag }}
+      storefront_tag: ${{ steps.storefront.outputs.tag }}
+      backoffice_tag: ${{ steps.backoffice.outputs.tag }}
+      sampledata_tag: ${{ steps.sampledata.outputs.tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Get commit IDs for each service
+        run: |
+          set_tag() {
+            local branch=$1
+            local step_name=$2
+            if [ "$branch" = "main" ]; then
+              echo "tag=latest" >> "$GITHUB_OUTPUT"
+            else
+              COMMIT_ID=$(git rev-parse --short origin/$branch 2>/dev/null || echo "unknown")
+              echo "tag=${COMMIT_ID}" >> "$GITHUB_OUTPUT"
+            fi
+          }
+          
+          # For branches other than main, try to get commit ID
+          git fetch origin ${{ inputs.cart_branch }} --depth=1 2>/dev/null || true
+          git fetch origin ${{ inputs.customer_branch }} --depth=1 2>/dev/null || true
+          git fetch origin ${{ inputs.inventory_branch }} --depth=1 2>/dev/null || true
+          git fetch origin ${{ inputs.location_branch }} --depth=1 2>/dev/null || true
+          git fetch origin ${{ inputs.media_branch }} --depth=1 2>/dev/null || true
+          git fetch origin ${{ inputs.order_branch }} --depth=1 2>/dev/null || true
+          git fetch origin ${{ inputs.payment_branch }} --depth=1 2>/dev/null || true
+          git fetch origin ${{ inputs.payment_paypal_branch }} --depth=1 2>/dev/null || true
+          git fetch origin ${{ inputs.product_branch }} --depth=1 2>/dev/null || true
+          git fetch origin ${{ inputs.promotion_branch }} --depth=1 2>/dev/null || true
+          git fetch origin ${{ inputs.rating_branch }} --depth=1 2>/dev/null || true
+          git fetch origin ${{ inputs.recommendation_branch }} --depth=1 2>/dev/null || true
+          git fetch origin ${{ inputs.search_branch }} --depth=1 2>/dev/null || true
+          git fetch origin ${{ inputs.tax_branch }} --depth=1 2>/dev/null || true
+          git fetch origin ${{ inputs.webhook_branch }} --depth=1 2>/dev/null || true
+          git fetch origin ${{ inputs.backoffice_bff_branch }} --depth=1 2>/dev/null || true
+          git fetch origin ${{ inputs.storefront_bff_branch }} --depth=1 2>/dev/null || true
+          git fetch origin ${{ inputs.storefront_branch }} --depth=1 2>/dev/null || true
+          git fetch origin ${{ inputs.backoffice_branch }} --depth=1 2>/dev/null || true
+          git fetch origin ${{ inputs.sampledata_branch }} --depth=1 2>/dev/null || true
+      
+      - name: Get cart tag
+        id: cart
+        run: |
+          if [ "${{ inputs.cart_branch }}" = "main" ]; then
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          else
+            COMMIT_ID=$(git rev-parse --short origin/${{ inputs.cart_branch }} 2>/dev/null || echo "unknown")
+            echo "tag=${COMMIT_ID}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Get customer tag
+        id: customer
+        run: |
+          if [ "${{ inputs.customer_branch }}" = "main" ]; then
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          else
+            COMMIT_ID=$(git rev-parse --short origin/${{ inputs.customer_branch }} 2>/dev/null || echo "unknown")
+            echo "tag=${COMMIT_ID}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Get inventory tag
+        id: inventory
+        run: |
+          if [ "${{ inputs.inventory_branch }}" = "main" ]; then
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          else
+            COMMIT_ID=$(git rev-parse --short origin/${{ inputs.inventory_branch }} 2>/dev/null || echo "unknown")
+            echo "tag=${COMMIT_ID}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Get location tag
+        id: location
+        run: |
+          if [ "${{ inputs.location_branch }}" = "main" ]; then
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          else
+            COMMIT_ID=$(git rev-parse --short origin/${{ inputs.location_branch }} 2>/dev/null || echo "unknown")
+            echo "tag=${COMMIT_ID}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Get media tag
+        id: media
+        run: |
+          if [ "${{ inputs.media_branch }}" = "main" ]; then
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          else
+            COMMIT_ID=$(git rev-parse --short origin/${{ inputs.media_branch }} 2>/dev/null || echo "unknown")
+            echo "tag=${COMMIT_ID}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Get order tag
+        id: order
+        run: |
+          if [ "${{ inputs.order_branch }}" = "main" ]; then
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          else
+            COMMIT_ID=$(git rev-parse --short origin/${{ inputs.order_branch }} 2>/dev/null || echo "unknown")
+            echo "tag=${COMMIT_ID}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Get payment tag
+        id: payment
+        run: |
+          if [ "${{ inputs.payment_branch }}" = "main" ]; then
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          else
+            COMMIT_ID=$(git rev-parse --short origin/${{ inputs.payment_branch }} 2>/dev/null || echo "unknown")
+            echo "tag=${COMMIT_ID}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Get payment_paypal tag
+        id: payment_paypal
+        run: |
+          if [ "${{ inputs.payment_paypal_branch }}" = "main" ]; then
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          else
+            COMMIT_ID=$(git rev-parse --short origin/${{ inputs.payment_paypal_branch }} 2>/dev/null || echo "unknown")
+            echo "tag=${COMMIT_ID}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Get product tag
+        id: product
+        run: |
+          if [ "${{ inputs.product_branch }}" = "main" ]; then
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          else
+            COMMIT_ID=$(git rev-parse --short origin/${{ inputs.product_branch }} 2>/dev/null || echo "unknown")
+            echo "tag=${COMMIT_ID}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Get promotion tag
+        id: promotion
+        run: |
+          if [ "${{ inputs.promotion_branch }}" = "main" ]; then
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          else
+            COMMIT_ID=$(git rev-parse --short origin/${{ inputs.promotion_branch }} 2>/dev/null || echo "unknown")
+            echo "tag=${COMMIT_ID}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Get rating tag
+        id: rating
+        run: |
+          if [ "${{ inputs.rating_branch }}" = "main" ]; then
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          else
+            COMMIT_ID=$(git rev-parse --short origin/${{ inputs.rating_branch }} 2>/dev/null || echo "unknown")
+            echo "tag=${COMMIT_ID}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Get recommendation tag
+        id: recommendation
+        run: |
+          if [ "${{ inputs.recommendation_branch }}" = "main" ]; then
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          else
+            COMMIT_ID=$(git rev-parse --short origin/${{ inputs.recommendation_branch }} 2>/dev/null || echo "unknown")
+            echo "tag=${COMMIT_ID}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Get search tag
+        id: search
+        run: |
+          if [ "${{ inputs.search_branch }}" = "main" ]; then
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          else
+            COMMIT_ID=$(git rev-parse --short origin/${{ inputs.search_branch }} 2>/dev/null || echo "unknown")
+            echo "tag=${COMMIT_ID}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Get tax tag
+        id: tax
+        run: |
+          if [ "${{ inputs.tax_branch }}" = "main" ]; then
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          else
+            COMMIT_ID=$(git rev-parse --short origin/${{ inputs.tax_branch }} 2>/dev/null || echo "unknown")
+            echo "tag=${COMMIT_ID}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Get webhook tag
+        id: webhook
+        run: |
+          if [ "${{ inputs.webhook_branch }}" = "main" ]; then
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          else
+            COMMIT_ID=$(git rev-parse --short origin/${{ inputs.webhook_branch }} 2>/dev/null || echo "unknown")
+            echo "tag=${COMMIT_ID}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Get backoffice_bff tag
+        id: backoffice_bff
+        run: |
+          if [ "${{ inputs.backoffice_bff_branch }}" = "main" ]; then
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          else
+            COMMIT_ID=$(git rev-parse --short origin/${{ inputs.backoffice_bff_branch }} 2>/dev/null || echo "unknown")
+            echo "tag=${COMMIT_ID}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Get storefront_bff tag
+        id: storefront_bff
+        run: |
+          if [ "${{ inputs.storefront_bff_branch }}" = "main" ]; then
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          else
+            COMMIT_ID=$(git rev-parse --short origin/${{ inputs.storefront_bff_branch }} 2>/dev/null || echo "unknown")
+            echo "tag=${COMMIT_ID}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Get storefront tag
+        id: storefront
+        run: |
+          if [ "${{ inputs.storefront_branch }}" = "main" ]; then
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          else
+            COMMIT_ID=$(git rev-parse --short origin/${{ inputs.storefront_branch }} 2>/dev/null || echo "unknown")
+            echo "tag=${COMMIT_ID}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Get backoffice tag
+        id: backoffice
+        run: |
+          if [ "${{ inputs.backoffice_branch }}" = "main" ]; then
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          else
+            COMMIT_ID=$(git rev-parse --short origin/${{ inputs.backoffice_branch }} 2>/dev/null || echo "unknown")
+            echo "tag=${COMMIT_ID}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Get sampledata tag
+        id: sampledata
+        run: |
+          if [ "${{ inputs.sampledata_branch }}" = "main" ]; then
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          else
+            COMMIT_ID=$(git rev-parse --short origin/${{ inputs.sampledata_branch }} 2>/dev/null || echo "unknown")
+            echo "tag=${COMMIT_ID}" >> $GITHUB_OUTPUT
+          fi
+
+  deploy:
+    needs: get-commit-ids
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Set up kubeconfig
+        env:
+          KUBECONFIG_CONTENT: ${{ secrets.KUBECONFIG }}
+        run: |
+          mkdir -p $HOME/.kube
+          echo "$KUBECONFIG_CONTENT" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+      
+      - name: Create namespace if not exists
+        run: |
+          kubectl get namespace ${{ inputs.namespace }} || kubectl create namespace ${{ inputs.namespace }}
+      
+      - name: Deploy services
+        run: |
+          kubectl set image deployment/cart cart=${{ secrets.DOCKER_HUB_USERNAME }}/yas-cart:${{ needs.get-commit-ids.outputs.cart_tag }} -n ${{ inputs.namespace }} --record || true
+          kubectl set image deployment/customer customer=${{ secrets.DOCKER_HUB_USERNAME }}/yas-customer:${{ needs.get-commit-ids.outputs.customer_tag }} -n ${{ inputs.namespace }} --record || true
+          kubectl set image deployment/inventory inventory=${{ secrets.DOCKER_HUB_USERNAME }}/yas-inventory:${{ needs.get-commit-ids.outputs.inventory_tag }} -n ${{ inputs.namespace }} --record || true
+          kubectl set image deployment/location location=${{ secrets.DOCKER_HUB_USERNAME }}/yas-location:${{ needs.get-commit-ids.outputs.location_tag }} -n ${{ inputs.namespace }} --record || true
+          kubectl set image deployment/media media=${{ secrets.DOCKER_HUB_USERNAME }}/yas-media:${{ needs.get-commit-ids.outputs.media_tag }} -n ${{ inputs.namespace }} --record || true
+          kubectl set image deployment/order order=${{ secrets.DOCKER_HUB_USERNAME }}/yas-order:${{ needs.get-commit-ids.outputs.order_tag }} -n ${{ inputs.namespace }} --record || true
+          kubectl set image deployment/payment payment=${{ secrets.DOCKER_HUB_USERNAME }}/yas-payment:${{ needs.get-commit-ids.outputs.payment_tag }} -n ${{ inputs.namespace }} --record || true
+          kubectl set image deployment/payment-paypal payment-paypal=${{ secrets.DOCKER_HUB_USERNAME }}/yas-payment-paypal:${{ needs.get-commit-ids.outputs.payment_paypal_tag }} -n ${{ inputs.namespace }} --record || true
+          kubectl set image deployment/product product=${{ secrets.DOCKER_HUB_USERNAME }}/yas-product:${{ needs.get-commit-ids.outputs.product_tag }} -n ${{ inputs.namespace }} --record || true
+          kubectl set image deployment/promotion promotion=${{ secrets.DOCKER_HUB_USERNAME }}/yas-promotion:${{ needs.get-commit-ids.outputs.promotion_tag }} -n ${{ inputs.namespace }} --record || true
+          kubectl set image deployment/rating rating=${{ secrets.DOCKER_HUB_USERNAME }}/yas-rating:${{ needs.get-commit-ids.outputs.rating_tag }} -n ${{ inputs.namespace }} --record || true
+          kubectl set image deployment/recommendation recommendation=${{ secrets.DOCKER_HUB_USERNAME }}/yas-recommendation:${{ needs.get-commit-ids.outputs.recommendation_tag }} -n ${{ inputs.namespace }} --record || true
+          kubectl set image deployment/search search=${{ secrets.DOCKER_HUB_USERNAME }}/yas-search:${{ needs.get-commit-ids.outputs.search_tag }} -n ${{ inputs.namespace }} --record || true
+          kubectl set image deployment/tax tax=${{ secrets.DOCKER_HUB_USERNAME }}/yas-tax:${{ needs.get-commit-ids.outputs.tax_tag }} -n ${{ inputs.namespace }} --record || true
+          kubectl set image deployment/webhook webhook=${{ secrets.DOCKER_HUB_USERNAME }}/yas-webhook:${{ needs.get-commit-ids.outputs.webhook_tag }} -n ${{ inputs.namespace }} --record || true
+          kubectl set image deployment/backoffice-bff backoffice-bff=${{ secrets.DOCKER_HUB_USERNAME }}/yas-backoffice-bff:${{ needs.get-commit-ids.outputs.backoffice_bff_tag }} -n ${{ inputs.namespace }} --record || true
+          kubectl set image deployment/storefront-bff storefront-bff=${{ secrets.DOCKER_HUB_USERNAME }}/yas-storefront-bff:${{ needs.get-commit-ids.outputs.storefront_bff_tag }} -n ${{ inputs.namespace }} --record || true
+          kubectl set image deployment/storefront storefront=${{ secrets.DOCKER_HUB_USERNAME }}/yas-storefront:${{ needs.get-commit-ids.outputs.storefront_tag }} -n ${{ inputs.namespace }} --record || true
+          kubectl set image deployment/backoffice backoffice=${{ secrets.DOCKER_HUB_USERNAME }}/yas-backoffice:${{ needs.get-commit-ids.outputs.backoffice_tag }} -n ${{ inputs.namespace }} --record || true
+          kubectl set image deployment/sampledata sampledata=${{ secrets.DOCKER_HUB_USERNAME }}/yas-sampledata:${{ needs.get-commit-ids.outputs.sampledata_tag }} -n ${{ inputs.namespace }} --record || true
+      
+      - name: Wait for deployments
+        run: |
+          kubectl rollout status deployment --all -n ${{ inputs.namespace }} --timeout=5m || true
+      
+      - name: Get service information
+        run: |
+          echo "## Deployed Services - Access Information" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Namespace: ${{ inputs.namespace }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Service Endpoint (NodePort)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          kubectl get svc -n ${{ inputs.namespace }} -o wide >> $GITHUB_STEP_SUMMARY || echo "No services found" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Pods Status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          kubectl get pods -n ${{ inputs.namespace }} >> $GITHUB_STEP_SUMMARY || echo "No pods found" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Image Versions Deployed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- cart: ${{ needs.get-commit-ids.outputs.cart_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- customer: ${{ needs.get-commit-ids.outputs.customer_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- inventory: ${{ needs.get-commit-ids.outputs.inventory_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- location: ${{ needs.get-commit-ids.outputs.location_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- media: ${{ needs.get-commit-ids.outputs.media_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- order: ${{ needs.get-commit-ids.outputs.order_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- payment: ${{ needs.get-commit-ids.outputs.payment_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- payment-paypal: ${{ needs.get-commit-ids.outputs.payment_paypal_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- product: ${{ needs.get-commit-ids.outputs.product_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- promotion: ${{ needs.get-commit-ids.outputs.promotion_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- rating: ${{ needs.get-commit-ids.outputs.rating_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- recommendation: ${{ needs.get-commit-ids.outputs.recommendation_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- search: ${{ needs.get-commit-ids.outputs.search_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- tax: ${{ needs.get-commit-ids.outputs.tax_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- webhook: ${{ needs.get-commit-ids.outputs.webhook_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- backoffice-bff: ${{ needs.get-commit-ids.outputs.backoffice_bff_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- storefront-bff: ${{ needs.get-commit-ids.outputs.storefront_bff_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- storefront: ${{ needs.get-commit-ids.outputs.storefront_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- backoffice: ${{ needs.get-commit-ids.outputs.backoffice_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- sampledata: ${{ needs.get-commit-ids.outputs.sampledata_tag }}" >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,63 @@
+# Cleanup Developer Deployment
+
+name: Cleanup Developer Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      namespace:
+        description: 'K8s namespace to delete (default: yas-dev)'
+        required: false
+        default: 'yas-dev'
+      confirm_delete:
+        description: 'Type "DELETE" to confirm deletion'
+        required: true
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Verify confirmation
+        run: |
+          if [ "${{ inputs.confirm_delete }}" != "DELETE" ]; then
+            echo "❌ Deletion not confirmed. Please type 'DELETE' in the confirm_delete field."
+            exit 1
+          fi
+          echo "✅ Deletion confirmed"
+      
+      - name: Set up kubeconfig
+        env:
+          KUBECONFIG_CONTENT: ${{ secrets.KUBECONFIG }}
+        run: |
+          mkdir -p $HOME/.kube
+          echo "$KUBECONFIG_CONTENT" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+      
+      - name: Delete namespace
+        run: |
+          echo "Deleting namespace: ${{ inputs.namespace }}"
+          kubectl delete namespace ${{ inputs.namespace }} --ignore-not-found=true
+          echo "✅ Namespace ${{ inputs.namespace }} deleted"
+      
+      - name: Verify deletion
+        run: |
+          echo "Verifying deletion..."
+          if kubectl get namespace ${{ inputs.namespace }} 2>/dev/null; then
+            echo "⏳ Namespace still exists, waiting for cleanup..."
+            sleep 10
+            kubectl get namespace ${{ inputs.namespace }} || echo "✅ Namespace successfully deleted"
+          else
+            echo "✅ Namespace successfully deleted"
+          fi
+      
+      - name: Summary
+        run: |
+          echo "## Cleanup Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Namespace:** ${{ inputs.namespace }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status:** ✅ Successfully cleaned up" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All deployments, services, and resources in the namespace have been deleted." >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,1270 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: yas-dev
+---
+# Cart Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cart
+  namespace: yas-dev
+  labels:
+    app: cart
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cart
+  template:
+    metadata:
+      labels:
+        app: cart
+    spec:
+      containers:
+      - name: cart
+        image: giahuytech/yas-cart:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "kube"
+        - name: DATABASE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: username
+              optional: true
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: password
+              optional: true
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cart
+  namespace: yas-dev
+  labels:
+    app: cart
+spec:
+  type: NodePort
+  ports:
+  - port: 8000
+    name: http
+    nodePort: 30001
+  selector:
+    app: cart
+---
+# Customer Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: customer
+  namespace: yas-dev
+  labels:
+    app: customer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: customer
+  template:
+    metadata:
+      labels:
+        app: customer
+    spec:
+      containers:
+      - name: customer
+        image: giahuytech/yas-customer:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "kube"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: customer
+  namespace: yas-dev
+  labels:
+    app: customer
+spec:
+  type: NodePort
+  ports:
+  - port: 8000
+    name: http
+    nodePort: 30002
+  selector:
+    app: customer
+---
+# Inventory Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory
+  namespace: yas-dev
+  labels:
+    app: inventory
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: inventory
+  template:
+    metadata:
+      labels:
+        app: inventory
+    spec:
+      containers:
+      - name: inventory
+        image: giahuytech/yas-inventory:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "kube"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: inventory
+  namespace: yas-dev
+  labels:
+    app: inventory
+spec:
+  type: NodePort
+  ports:
+  - port: 8000
+    name: http
+    nodePort: 30003
+  selector:
+    app: inventory
+---
+# Location Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: location
+  namespace: yas-dev
+  labels:
+    app: location
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: location
+  template:
+    metadata:
+      labels:
+        app: location
+    spec:
+      containers:
+      - name: location
+        image: giahuytech/yas-location:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "kube"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: location
+  namespace: yas-dev
+  labels:
+    app: location
+spec:
+  type: NodePort
+  ports:
+  - port: 8000
+    name: http
+    nodePort: 30004
+  selector:
+    app: location
+---
+# Media Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: media
+  namespace: yas-dev
+  labels:
+    app: media
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: media
+  template:
+    metadata:
+      labels:
+        app: media
+    spec:
+      containers:
+      - name: media
+        image: giahuytech/yas-media:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "kube"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: media
+  namespace: yas-dev
+  labels:
+    app: media
+spec:
+  type: NodePort
+  ports:
+  - port: 8000
+    name: http
+    nodePort: 30005
+  selector:
+    app: media
+---
+# Order Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order
+  namespace: yas-dev
+  labels:
+    app: order
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: order
+  template:
+    metadata:
+      labels:
+        app: order
+    spec:
+      containers:
+      - name: order
+        image: giahuytech/yas-order:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "kube"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order
+  namespace: yas-dev
+  labels:
+    app: order
+spec:
+  type: NodePort
+  ports:
+  - port: 8000
+    name: http
+    nodePort: 30006
+  selector:
+    app: order
+---
+# Payment Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment
+  namespace: yas-dev
+  labels:
+    app: payment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payment
+  template:
+    metadata:
+      labels:
+        app: payment
+    spec:
+      containers:
+      - name: payment
+        image: giahuytech/yas-payment:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "kube"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment
+  namespace: yas-dev
+  labels:
+    app: payment
+spec:
+  type: NodePort
+  ports:
+  - port: 8000
+    name: http
+    nodePort: 30007
+  selector:
+    app: payment
+---
+# Payment-PayPal Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-paypal
+  namespace: yas-dev
+  labels:
+    app: payment-paypal
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payment-paypal
+  template:
+    metadata:
+      labels:
+        app: payment-paypal
+    spec:
+      containers:
+      - name: payment-paypal
+        image: giahuytech/yas-payment-paypal:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "kube"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-paypal
+  namespace: yas-dev
+  labels:
+    app: payment-paypal
+spec:
+  type: NodePort
+  ports:
+  - port: 8000
+    name: http
+    nodePort: 30008
+  selector:
+    app: payment-paypal
+---
+# Product Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product
+  namespace: yas-dev
+  labels:
+    app: product
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: product
+  template:
+    metadata:
+      labels:
+        app: product
+    spec:
+      containers:
+      - name: product
+        image: giahuytech/yas-product:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "kube"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: product
+  namespace: yas-dev
+  labels:
+    app: product
+spec:
+  type: NodePort
+  ports:
+  - port: 8000
+    name: http
+    nodePort: 30009
+  selector:
+    app: product
+---
+# Promotion Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: promotion
+  namespace: yas-dev
+  labels:
+    app: promotion
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: promotion
+  template:
+    metadata:
+      labels:
+        app: promotion
+    spec:
+      containers:
+      - name: promotion
+        image: giahuytech/yas-promotion:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "kube"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: promotion
+  namespace: yas-dev
+  labels:
+    app: promotion
+spec:
+  type: NodePort
+  ports:
+  - port: 8000
+    name: http
+    nodePort: 30010
+  selector:
+    app: promotion
+---
+# Rating Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rating
+  namespace: yas-dev
+  labels:
+    app: rating
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rating
+  template:
+    metadata:
+      labels:
+        app: rating
+    spec:
+      containers:
+      - name: rating
+        image: giahuytech/yas-rating:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "kube"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rating
+  namespace: yas-dev
+  labels:
+    app: rating
+spec:
+  type: NodePort
+  ports:
+  - port: 8000
+    name: http
+    nodePort: 30011
+  selector:
+    app: rating
+---
+# Recommendation Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: recommendation
+  namespace: yas-dev
+  labels:
+    app: recommendation
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: recommendation
+  template:
+    metadata:
+      labels:
+        app: recommendation
+    spec:
+      containers:
+      - name: recommendation
+        image: giahuytech/yas-recommendation:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "kube"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: recommendation
+  namespace: yas-dev
+  labels:
+    app: recommendation
+spec:
+  type: NodePort
+  ports:
+  - port: 8000
+    name: http
+    nodePort: 30012
+  selector:
+    app: recommendation
+---
+# Search Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: search
+  namespace: yas-dev
+  labels:
+    app: search
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: search
+  template:
+    metadata:
+      labels:
+        app: search
+    spec:
+      containers:
+      - name: search
+        image: giahuytech/yas-search:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "kube"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: search
+  namespace: yas-dev
+  labels:
+    app: search
+spec:
+  type: NodePort
+  ports:
+  - port: 8000
+    name: http
+    nodePort: 30013
+  selector:
+    app: search
+---
+# Tax Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tax
+  namespace: yas-dev
+  labels:
+    app: tax
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tax
+  template:
+    metadata:
+      labels:
+        app: tax
+    spec:
+      containers:
+      - name: tax
+        image: giahuytech/yas-tax:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "kube"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tax
+  namespace: yas-dev
+  labels:
+    app: tax
+spec:
+  type: NodePort
+  ports:
+  - port: 8000
+    name: http
+    nodePort: 30014
+  selector:
+    app: tax
+---
+# Webhook Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webhook
+  namespace: yas-dev
+  labels:
+    app: webhook
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webhook
+  template:
+    metadata:
+      labels:
+        app: webhook
+    spec:
+      containers:
+      - name: webhook
+        image: giahuytech/yas-webhook:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "kube"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webhook
+  namespace: yas-dev
+  labels:
+    app: webhook
+spec:
+  type: NodePort
+  ports:
+  - port: 8000
+    name: http
+    nodePort: 30015
+  selector:
+    app: webhook
+---
+# Backoffice BFF Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backoffice-bff
+  namespace: yas-dev
+  labels:
+    app: backoffice-bff
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backoffice-bff
+  template:
+    metadata:
+      labels:
+        app: backoffice-bff
+    spec:
+      containers:
+      - name: backoffice-bff
+        image: giahuytech/yas-backoffice-bff:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "kube"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backoffice-bff
+  namespace: yas-dev
+  labels:
+    app: backoffice-bff
+spec:
+  type: NodePort
+  ports:
+  - port: 8000
+    name: http
+    nodePort: 30016
+  selector:
+    app: backoffice-bff
+---
+# Storefront BFF Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: storefront-bff
+  namespace: yas-dev
+  labels:
+    app: storefront-bff
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: storefront-bff
+  template:
+    metadata:
+      labels:
+        app: storefront-bff
+    spec:
+      containers:
+      - name: storefront-bff
+        image: giahuytech/yas-storefront-bff:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "kube"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: storefront-bff
+  namespace: yas-dev
+  labels:
+    app: storefront-bff
+spec:
+  type: NodePort
+  ports:
+  - port: 8000
+    name: http
+    nodePort: 30017
+  selector:
+    app: storefront-bff
+---
+# Storefront Frontend
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: storefront
+  namespace: yas-dev
+  labels:
+    app: storefront
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: storefront
+  template:
+    metadata:
+      labels:
+        app: storefront
+    spec:
+      containers:
+      - name: storefront
+        image: giahuytech/yas-storefront:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: storefront
+  namespace: yas-dev
+  labels:
+    app: storefront
+spec:
+  type: NodePort
+  ports:
+  - port: 3000
+    name: http
+    nodePort: 30018
+  selector:
+    app: storefront
+---
+# Backoffice Frontend
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backoffice
+  namespace: yas-dev
+  labels:
+    app: backoffice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backoffice
+  template:
+    metadata:
+      labels:
+        app: backoffice
+    spec:
+      containers:
+      - name: backoffice
+        image: giahuytech/yas-backoffice:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backoffice
+  namespace: yas-dev
+  labels:
+    app: backoffice
+spec:
+  type: NodePort
+  ports:
+  - port: 3000
+    name: http
+    nodePort: 30019
+  selector:
+    app: backoffice
+---
+# Sampledata Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sampledata
+  namespace: yas-dev
+  labels:
+    app: sampledata
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sampledata
+  template:
+    metadata:
+      labels:
+        app: sampledata
+    spec:
+      containers:
+      - name: sampledata
+        image: giahuytech/yas-sampledata:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "kube"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sampledata
+  namespace: yas-dev
+  labels:
+    app: sampledata
+spec:
+  type: NodePort
+  ports:
+  - port: 8000
+    name: http
+    nodePort: 30020
+  selector:
+    app: sampledata
